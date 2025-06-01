@@ -37,6 +37,7 @@ manage_session() {
                     log_info "Đang chạy lại session cũ..."
                     eval "$CMD_APT_UPDATE_INSTALL" || log_error "Không thể thực thi lệnh APT."
                     eval "$CMD_SWTPM" || log_error "Không thể khởi động SWTPM."
+                    sleep 2
                     eval "$CMD_QEMU_LAUNCH" || log_error "Không thể khởi động QEMU VM."
                     log_success "Session cũ đã được khởi chạy."
                     exit 0
