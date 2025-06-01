@@ -30,7 +30,7 @@ echo -ne ""$green"Version: $version"
 if [ -e "session.env" ]; then
   source session.env
   echo -ne ""$yellow"Đã Phát hiện session cũ ấn Y để chạy lại ,N để tạo session mới.$reset"
-  read -p "'$reset"[y/n]:"$reset" " optn1
+  read -p "'$reset"[y/n]:"$reset" optn1
   while true;do
       case $optn in
           y|Y) $cmd1;$cmd2;$session $optn;break;exit;;
