@@ -62,9 +62,9 @@ cmd="xhost + ; mkdir /tmp/mytpm1; swtpm socket --tpmstate dir=/tmp/mytpm1 --ctrl
 qemucmds="sudo kvm -cpu host,+topoext,hv_relaxed,hv_spinlocks=0x1fff,hv-passthrough,+pae,+nx,kvm=on,+svm,+vme,+avx2,+vmx,+hypervisor,+xsave -smp "$smp" -M q35,usb=on -device usb-tablet -m "$ram" -device virtio-balloon-pci -vga virtio -net nic,netdev=n0,model=virtio-net-pci -netdev user,id=n0,hostfwd=tcp::3389-:3389 -boot d     -device virtio-serial-pci -device virtio-rng-pci      -chardev socket,id=chrtpm,path=/tmp/mytpm1/swtpm-sock -tpmdev emulator,id=tpm0,chardev=chrtpm -device tpm-tis,tpmdev=tpm0 -enable-kvm -device nvme,serial=deadbeef,drive=nvm -drive file="$diskname",if=none,id=nvm -drive file="$isoname",media=cdrom -drive file=virtio.iso,media=cdrom -drive file=OVMF_CODE.fd,format=raw,if=pflash     -drive file=OVMF_VARS.fd,format=raw,if=pflash     -uuid e47ddb84-fb4d-46f9-b531-14bb15156336"
 
 # Tạo Session (session.env) :))
-echo "cmd1=apt update && apt install swtpm qemu-kvm -y" >> session.env
-echo "cmd2=$cmd" >> session.env
-echo "session=$qemucmds" >> session.env
+echo "cmd1='"'apt update && apt install swtpm qemu-kvm -y'"'" >> session.env
+echo "cmd2='"'$cmd'"'" >> session.env
+echo "session='"'$qemucmds'"'" >> session.env
 
 $cmd
 $qemucmds
