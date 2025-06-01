@@ -5,3 +5,4 @@ xhost + ;wget https://raw.githubusercontent.com/assnssters/idx-wqemu-cuss/refs/h
 ```
 - Version: (đang thử nghiệm) v0.1.0
 - Credit: Đ.Trí
+  `studio.firebase.google`
