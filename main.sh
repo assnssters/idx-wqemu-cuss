@@ -24,7 +24,7 @@ log_success() { echo -e "${GREEN}[OK]${RESET} $1"; }
 log_warning() { echo -e "${YELLOW}[CẢNH BÁO]${RESET} $1"; }
 log_error() { echo -e "${RED}[LỖI]${RESET} $1"; }
 
-check_prerequisites() {
+check_sudo() {
     log_info "Kiểm tra quyền truy cập..."
     if [[ "$EUID" -ne 0 ]]; then
         log_warning "Bạn nên chạy script với 'sudo' để tránh lỗi quyền."
@@ -165,7 +165,7 @@ main() {
     echo -e "${GREEN}                    Bởi Đ.Trí (Phiên bản ${version})             ${RESET}"
     echo -e "${GREEN}==============================================================${RESET}\n"
 
-    check_prerequisites
+    check_sudo
     manage_session
 
     update_and_install_packages
