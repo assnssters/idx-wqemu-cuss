@@ -2,8 +2,8 @@
 
 #==============================================================#
 # Script:  QEMU/KVM Windows VM Setup (Phiên bản tinh gọn)     #
-# Version: v0.1.0 (Enhanced)                                 #
-# Credit:  Đ.Trí (Tác giả gốc)                                #
+# Version: v0.1.0 (Tester)                                 #
+# Credit:  Đ.Trí                               #
 #==============================================================#
 
 readonly RAM="48G"
