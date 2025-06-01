@@ -105,7 +105,7 @@ launch_vm() {
 
     local swtpm_cmd="xhost + ; mkdir -p /tmp/mytpm1; swtpm socket --tpmstate dir=/tmp/mytpm1 --ctrl type=unixio,path=/tmp/mytpm1/swtpm-sock --log level=20 &"
 
-    local qemu_cmds="kvm \
+    local qemu_cmds="sudo kvm \
         -cpu host,+topoext,hv_relaxed,hv_spinlocks=0x1fff,hv-passthrough,+pae,+nx,kvm=on,+svm,+vme,+avx2,+vmx,+hypervisor,+xsave \
         -smp ${SMP_CONFIG} \
         -M q35,usb=on \
