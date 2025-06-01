@@ -1,94 +1,181 @@
 #!/bin/bash
-# File có lỗi, liên hệ zalo 0388779418 Để sửa lỗi :)
-# You giám xem Code ha méc mẹ nè :)))
-# thì ra You xem source Code méc mẹ đừng hỏi tại sao
-# usr make code này là Trí :))
-#---- à húu anh săn em vào lúc tối nay làm thịt rồi thành bữa tối nay anh như con sv con sv ơ à à----#
 
-# Variable cho VM :)
-ram="48G"
-disksize="180G"
-diskname="win.qcow2"
-isoname="win.iso"
-smp="14,cores=14,sockets=1"
-option=" "
+#==============================================================#
+# Script:  QEMU/KVM Windows VM Setup (Phiên bản tinh gọn)     #
+# Version: v0.1.0 (Enhanced)                                 #
+# Credit:  Đ.Trí (Tác giả gốc)                                #
+#==============================================================#
 
-# thêm mã màu cho nó đẹp ý mà :))
-red='\033[1;31m'
-green='\033[1;32m'
-yellow='\033[1;33m'
-blue='\033[1;34m'
-light_cyan='\033[1;96m'
-reset='\033[0m'
+readonly RAM="48G"
+readonly DISK_SIZE="180G"
+readonly DISK_NAME="win.qcow2"
+readonly ISO_NAME="win.iso"
+readonly SMP_CONFIG="14,cores=14,sockets=1"
 
-# thêm version :))
+readonly RED='\033[1;31m'
+readonly GREEN='\033[1;32m'
+readonly YELLOW='\033[1;33m'
+readonly BLUE='\033[1;34m'
+readonly LIGHT_CYAN='\033[1;96m'
+readonly RESET='\033[0m'
+
+log_info() { echo -e "${LIGHT_CYAN}[INFO]${RESET} $1"; }
+log_success() { echo -e "${GREEN}[OK]${RESET} $1"; }
+log_warning() { echo -e "${YELLOW}[CẢNH BÁO]${RESET} $1"; }
+log_error() { echo -e "${RED}[LỖI]${RESET} $1"; }
+
+check_prerequisites() {
+    log_info "Kiểm tra quyền truy cập..."
+    if [[ "$EUID" -ne 0 ]]; then
+        log_warning "Bạn nên chạy script với 'sudo' để tránh lỗi quyền."
+        read -p "${YELLOW}Tiếp tục mà không có sudo có thể gây lỗi. Bạn có muốn tiếp tục không? [y/N]: ${RESET}" continue_without_sudo
+        if [[ ! "$continue_without_sudo" =~ ^[yY]$ ]]; then
+            log_error "Vui lòng chạy lại script với 'sudo'."
+            exit 1
+        fi
+    fi
+    log_success "Kiểm tra quyền truy cập hoàn tất."
+}
+
+manage_session() {
+    log_info "Đang kiểm tra session cũ..."
+    if [[ -e "session.env" ]]; then
+        source session.env
+        log_warning "Đã phát hiện session cũ."
+        echo -ne "${YELLOW}Bạn muốn chạy lại session cũ (Y) hay tạo session mới (N)? ${RESET}\n"
+        while true; do
+            read -p "[y/n]: " optn1
+            case $optn1 in
+                y|Y)
+                    log_info "Đang chạy lại session cũ..."
+                    eval "$CMD_APT_UPDATE_INSTALL" || log_error "Không thể thực thi lệnh APT."
+                    eval "$CMD_SWTPM" || log_error "Không thể khởi động SWTPM."
+                    eval "$CMD_QEMU_LAUNCH" || log_error "Không thể khởi động QEMU VM."
+                    log_success "Session cũ đã được khởi chạy."
+                    exit 0
+                    ;;
+                n|N)
+                    log_info "Đang xóa session cũ và các file liên quan..."
+                    rm -f session.env "$DISK_NAME" "$ISO_NAME" virtio.iso OVMF_VARS.fd OVMF_CODE.fd
+                    log_success "Session cũ đã được xóa."
+                    break
+                    ;;
+                *)
+                    log_error "Lựa chọn không hợp lệ. Vui lòng chọn 'y' hoặc 'n'."
+                    ;;
+            esac
+        done
+    else
+        log_info "Không tìm thấy session cũ. Đang thiết lập mới."
+    fi
+}
+
+update_and_install_packages() {
+    log_info "Đang cập nhật hệ thống và cài đặt gói cần thiết..."
+    sudo apt update -y > /dev/null 2>&1 || { log_error "Không thể cập nhật APT. Kiểm tra kết nối mạng." && exit 1; }
+    sudo apt install swtpm qemu-kvm -y > /dev/null 2>&1 || { log_error "Không thể cài đặt swtpm/qemu-kvm." && exit 1; }
+    log_success "Update và cài đặt gói hoàn tất."
+}
+
+download_files() {
+    log_info "Đang tải file VirtIO.iso và OVMF firmware..."
+    trap 'log_error "Tải file $download_file thất bại. Kiểm tra kết nối mạng." && exit 1' ERR
+
+    download_file="virtio.iso"
+    wget --progress=bar:force:noscroll -O "$download_file" https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.266-1/virtio-win.iso || exit 1
+    log_success "Đã tải: $download_file"
+
+    download_file="OVMF_VARS.fd"
+    wget --progress=bar:force:noscroll -O "$download_file" https://raw.githubusercontent.com/clearlinux/common/refs/heads/master/OVMF_VARS.fd || exit 1
+    log_success "Đã tải: $download_file"
+
+    download_file="OVMF_CODE.fd"
+    wget --progress=bar:force:noscroll -O "$download_file" https://raw.githubusercontent.com/clearlinux/common/refs/heads/master/OVMF_CODE.fd || exit 1
+    log_success "Đã tải: $download_file"
+
+    trap - ERR
+    log_success "Tải VirtIO.iso và OVMF firmware hoàn tất."
+
+    read -p "${YELLOW}Dán link ISO Windows vào đây: ${RESET}" isourl
+    if [[ -z "$isourl" ]]; then
+        log_error "Link ISO Windows không được trống."
+        exit 1
+    fi
+    log_info "Đang tải ISO Windows từ: ${isourl}..."
+    download_file="$ISO_NAME"
+    wget --progress=bar:force:noscroll -O "$download_file" "$isourl" || { log_error "Không thể tải ISO Windows. Kiểm tra lại URL." && exit 1; }
+    log_success "Tải ISO Windows hoàn tất: $ISO_NAME"
+}
+
+create_virtual_disk() {
+    log_info "Đang tạo ổ đĩa ảo ${DISK_NAME} (${DISK_SIZE})..."
+    qemu-img create -f qcow2 "$DISK_NAME" "$DISK_SIZE" || { log_error "Không thể tạo ổ đĩa ảo. Kiểm tra dung lượng trống." && exit 1; }
+    log_success "Tạo ổ đĩa ảo hoàn tất: ${DISK_NAME}."
+}
+
+launch_vm() {
+    log_info "Đang chuẩn bị khởi động máy ảo Windows..."
+
+    local swtpm_cmd="xhost + ; mkdir -p /tmp/mytpm1; swtpm socket --tpmstate dir=/tmp/mytpm1 --ctrl type=unixio,path=/tmp/mytpm1/swtpm-sock --log level=20 &"
+
+    local qemu_cmds="sudo kvm \
+        -cpu host,+topoext,hv_relaxed,hv_spinlocks=0x1fff,hv-passthrough,+pae,+nx,kvm=on,+svm,+vme,+avx2,+vmx,+hypervisor,+xsave \
+        -smp ${SMP_CONFIG} \
+        -M q35,usb=on \
+        -device usb-tablet \
+        -m ${RAM} \
+        -device virtio-balloon-pci \
+        -vga virtio \
+        -net nic,netdev=n0,model=virtio-net-pci \
+        -netdev user,id=n0,hostfwd=tcp::3389-:3389 \
+        -boot d \
+        -device virtio-serial-pci \
+        -device virtio-rng-pci \
+        -chardev socket,id=chrtpm,path=/tmp/mytpm1/swtpm-sock \
+        -tpmdev emulator,id=tpm0,chardev=chrtpm \
+        -device tpm-tis,tpmdev=tpm0 \
+        -enable-kvm \
+        -device nvme,serial=deadbeef,drive=nvm \
+        -drive file=${DISK_NAME},if=none,id=nvm \
+        -drive file=${ISO_NAME},media=cdrom \
+        -drive file=virtio.iso,media=cdrom \
+        -drive file=OVMF_CODE.fd,format=raw,if=pflash \
+        -drive file=OVMF_VARS.fd,format=raw,if=pflash \
+        -uuid e47ddb84-fb4d-46f9-b531-14bb15156336"
+
+    log_info "Đang lưu cấu hình session vào session.env..."
+    echo "CMD_APT_UPDATE_INSTALL=\"sudo apt update -y > /dev/null 2>&1 && sudo apt install swtpm qemu-kvm -y > /dev/null 2>&1\"" > session.env
+    echo "CMD_SWTPM=\"$swtpm_cmd\"" >> session.env
+    echo "CMD_QEMU_LAUNCH=\"$qemu_cmds\"" >> session.env
+    log_success "Đã lưu session."
+
+    log_info "Đang khởi động TPM ảo (swtpm)..."
+    eval "$swtpm_cmd" &
+    sleep 2
+
+    log_info "Đang khởi động máy ảo Windows. Cửa sổ QEMU sẽ xuất hiện..."
+    eval "$qemu_cmds"
+    log_success "Máy ảo đã đóng hoặc đang chạy."
+}
+
+main() {
+    clear
+    echo -e "${GREEN}==============================================================${RESET}"
+    echo -e "${GREEN}             SCRIPT THIẾT LẬP MÁY ẢO WINDOWS QEMU/KVM          ${RESET}"
+    echo -e "${GREEN}                    Bởi Đ.Trí (Phiên bản ${version})             ${RESET}"
+    echo -e "${GREEN}==============================================================${RESET}\n"
+
+    check_prerequisites
+    manage_session
+
+    update_and_install_packages
+    download_files
+    create_virtual_disk
+    launch_vm
+
+    log_success "Thiết lập máy ảo hoàn tất!"
+    log_info "Bạn có thể chạy lại script này và chọn 'Y' để khởi động lại máy ảo lần sau."
+}
+
 version="v0.1.0"
-clear
-echo -ne "${green}Credit: Đ.Trí :)\n"
-echo -ne "${green}Version: $version \n"
-
-# check session cũ
-sleep 1
-if [ -e "session.env" ]; then
-  source session.env
-  echo -ne "${yellow}Đã Phát hiện session cũ ấn Y để chạy lại ,N để tạo session mới.${reset} \n"
-  while true; do
-    read -p "[y/n]: " optn1
-    case $optn1 in
-        y|Y)
-            eval "$cmd1"
-            eval "$cmd2"
-            eval "$session"
-            break
-            exit
-            ;;
-        n|N)
-            rm -f session.env
-            rm -f win.qcow2
-            rm -f win.iso
-            break
-            ;;
-        *)
-            echo -ne "${red}Chọn lại đê${reset} \n"
-            ;;
-    esac
-    sleep 1
-  done
-else
-   echo -ne "${red}Không thấy session cũ.\n${reset}"
-fi
-
-# bắt đầu nhỉ nhiên là update package và tải mấy gói cần thiết á( do thêm cái ẩn nên ko thấy :))) )
-printf "${yellow}Đang Update và Tải gói cần thiết...${reset} \r"
-sudo apt update -y > /dev/null 2>&1
-sudo apt install swtpm qemu-kvm -y > /dev/null 2>&1
-echo -ne "${yellow}Đang Update và Tải gói cần thiết...${green}Hoàn tất.${reset}\n"
-
-# Tải ít file về :))
-printf "${yellow}Đang tải file virtio.iso và OVMF firmware...${reset} \r"
-wget -q --show-progress https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.266-1/virtio-win.iso -O virtio.iso
-wget -q --show-progress https://raw.githubusercontent.com/clearlinux/common/refs/heads/master/OVMF_VARS.fd -O OVMF_VARS.fd
-wget -q --show-progress https://raw.githubusercontent.com/clearlinux/common/refs/heads/master/OVMF_CODE.fd -O OVMF_CODE.fd
-echo -ne "${yellow}Đang tải file virtio.iso và OVMF firmware...${green}Hoàn tất.${reset}\n"
-
-# Tải file os ;)
-read -p "${yellow}Bỏ link ISO Windows vào đây:${reset} " isourl
-printf "${yellow}Đang tải ISO Windows từ: ${isourl}...${reset} \r"
-wget -q --show-progress "$isourl" -O "$isoname"
-echo -ne "${yellow}Đang tải ISO Windows từ: ${isourl}...${green}Hoàn tất.${reset}\n"
-
-printf "${yellow}Đang tạo ổ đĩa ảo $diskname với kích thước $disksize...${reset} \r"
-qemu-img create -f qcow2 "$diskname" "$disksize"
-echo -ne "${yellow}Đang tạo ổ đĩa ảo $diskname với kích thước $disksize...${green}Hoàn tất.${reset}\n"
-
-# :) Set vari
-swtpm_cmd="xhost + ; mkdir -p /tmp/mytpm1; swtpm socket --tpmstate dir=/tmp/mytpm1 --ctrl type=unixio,path=/tmp/mytpm1/swtpm-sock --log level=20 &"
-qemucmds="sudo kvm -cpu host,+topoext,hv_relaxed,hv_spinlocks=0x1fff,hv-passthrough,+pae,+nx,kvm=on,+svm,+vme,+avx2,+vmx,+hypervisor,+xsave -smp $smp -M q35,usb=on -device usb-tablet -m $ram -device virtio-balloon-pci -vga virtio -net nic,netdev=n0,model=virtio-net-pci -netdev user,id=n0,hostfwd=tcp::3389-:3389 -boot d -device virtio-serial-pci -device virtio-rng-pci -chardev socket,id=chrtpm,path=/tmp/mytpm1/swtpm-sock -tpmdev emulator,id=tpm0,chardev=chrtpm -device tpm-tis,tpmdev=tpm0 -enable-kvm -device nvme,serial=deadbeef,drive=nvm -drive file=$diskname,if=none,id=nvm -drive file=$isoname,media=cdrom -drive file=virtio.iso,media=cdrom -drive file=OVMF_CODE.fd,format=raw,if=pflash -drive file=OVMF_VARS.fd,format=raw,if=pflash -uuid e47ddb84-fb4d-46f9-b531-14bb15156336"
-
-# Tạo Session (session.env) :))
-echo "cmd1=\"sudo apt update -y > /dev/null 2>&1 && sudo apt install swtpm qemu-kvm -y > /dev/null 2>&1\"" > session.env
-echo "cmd2=\"$swtpm_cmd\"" >> session.env
-echo "session=\"$qemucmds\"" >> session.env
-
-eval "$swtpm_cmd"
-eval "$qemucmds"
+main
