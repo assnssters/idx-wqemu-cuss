@@ -23,26 +23,27 @@ reset='\033[0m'
 # thêm version :))
 version=v0.1.0
 clear
-echo -ne ""$green"Credit: Đ.Trí :)"
-echo -ne ""$green"Version: $version"
+echo -ne ""$green"Credit: Đ.Trí :)\n"
+echo -ne ""$green"Version: $version \n"
 
 # check session cũ
+sleep 1
 if [ -e "session.env" ]; then
   source session.env
-  echo -ne ""$yellow"Đã Phát hiện session cũ ấn Y để chạy lại ,N để tạo session mới.$reset"
-  read -p "'$reset"[y/n]:"$reset" optn1
+  echo -ne ""$yellow"Đã Phát hiện session cũ ấn Y để chạy lại ,N để tạo session mới.$reset \n"
+  read -p "${reset}[y/n]: " optn1
   while true;do
       case $optn in
           y|Y) $cmd1;$cmd2;$session $optn;break;exit;;
           n|N)rm -f session.env;rm -f win.qcow2;rm -f win.iso;break;;
-          *)echo -ne ""$red"Chọn lại đê$reset";;
+          *)echo -ne ""$red"Chọn lại đê$reset \n";;
       esac
   done
 else
    echo -ne ""$red"Không thấy session cũ."
 fi
 # bắt đầu nhỉ nhiên là update package và tải mấy gói cần thiết á( do thêm cái ẩn nên ko thấy :))) )
-printf ""$yellow"Đang Update và Tải gói cần thiết...$reset"
+printf ""$yellow"Đang Update và Tải gói cần thiết...$reset \r"
 sudo apt update -y > /dev/null 2>&1
 sudo apt install swtpm qemu-kvm -y > /dev/null 2>&1
 
@@ -51,7 +52,7 @@ wget https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-vi
 wget https://raw.githubusercontent.com/clearlinux/common/refs/heads/master/OVMF_VARS.fd -O OVMF_VARS.fd && wget https://raw.githubusercontent.com/clearlinux/common/refs/heads/master/OVMF_CODE.fd -O OVMF_CODE.fd
 
 # Tải file os ;)
-read -p ""$yellow"Bỏ link ISO Windows vào đây: " isourl
+read -p "${$yellow}Bỏ link ISO Windows vào đây:${reset} " isourl
 wget "$isourl" -O $isoname
 qemu-img create -f qcow2 $diskname $disksize
 
@@ -64,3 +65,5 @@ echo "cmd1=apt update && apt install swtpm qemu-kvm -y" >> session.env
 echo "cmd2=$cmd" >> session.env
 echo "session=$qemucmds" >> session.env
 
+$cmd
+$qemucmds
