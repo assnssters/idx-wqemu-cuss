@@ -138,11 +138,11 @@ launch_vm() {
     log_success "Đã lưu session."
 
     log_info "Đang khởi động TPM ảo (swtpm)..."
-    eval "$swtpm_cmd" &
+    sudo eval "$swtpm_cmd" &
     sleep 2
 
     log_info "Đang khởi động máy ảo Windows. Cửa sổ QEMU sẽ xuất hiện..."
-    eval "$qemu_cmds"
+    sudo eval "$qemu_cmds"
     log_success "Máy ảo đã đóng hoặc đang chạy."
 }
 
