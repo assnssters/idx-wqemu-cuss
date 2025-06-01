@@ -36,8 +36,8 @@ if [ -e "session.env" ]; then
           y|Y) $cmd1;$cmd2;$session $optn;break;exit;;
           n|N)rm -f session.env;rm -f win.qcow2;rm -f win.iso;break;;
           *)echo -ne ""$red"Chọn lại đê$reset";;
-      done
-  esac
+      esac
+  done
 else
    echo -ne ""$red"Không thấy session cũ."
 fi
