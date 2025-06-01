@@ -33,6 +33,7 @@ if [ -e "session.env" ]; then
   echo -ne ""$yellow"Đã Phát hiện session cũ ấn Y để chạy lại ,N để tạo session mới.$reset \n"
   read -p "${reset}[y/n]: " optn1
   while true;do
+  sleep 1
       case $optn in
           y|Y) $cmd1;$cmd2;$session $optn;break;exit;;
           n|N)rm -f session.env;rm -f win.qcow2;rm -f win.iso;break;;
