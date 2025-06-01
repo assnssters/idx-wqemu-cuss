@@ -1,5 +1,5 @@
 # Dự án idx wqemu
 - script:
-  ```bash
-https://raw.githubusercontent.com/assnssters/idx-wqemu-cuss/refs/heads/main/main.sh
+```bash
+wget https://raw.githubusercontent.com/assnssters/idx-wqemu-cuss/refs/heads/main/main.sh -O main.sh && sudo bash main.sh
 ```
