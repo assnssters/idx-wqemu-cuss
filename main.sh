@@ -24,19 +24,6 @@ log_success() { echo -e "${GREEN}[OK]${RESET} $1"; }
 log_warning() { echo -e "${YELLOW}[CẢNH BÁO]${RESET} $1"; }
 log_error() { echo -e "${RED}[LỖI]${RESET} $1"; }
 
-check_sudo() {
-    log_info "Kiểm tra quyền truy cập..."
-    if [[ "$EUID" -ne 0 ]]; then
-        log_warning "Bạn nên chạy script với 'sudo' để tránh lỗi quyền."
-        read -p "${YELLOW}Tiếp tục mà không có sudo có thể gây lỗi. Bạn có muốn tiếp tục không? [y/N]: ${RESET}" continue_without_sudo
-        if [[ ! "$continue_without_sudo" =~ ^[yY]$ ]]; then
-            log_error "Vui lòng chạy lại script với 'sudo'."
-            exit 1
-        fi
-    fi
-    log_success "Kiểm tra quyền truy cập hoàn tất."
-}
-
 manage_session() {
     log_info "Đang kiểm tra session cũ..."
     if [[ -e "session.env" ]]; then
@@ -118,7 +105,7 @@ launch_vm() {
 
     local swtpm_cmd="xhost + ; mkdir -p /tmp/mytpm1; swtpm socket --tpmstate dir=/tmp/mytpm1 --ctrl type=unixio,path=/tmp/mytpm1/swtpm-sock --log level=20 &"
 
-    local qemu_cmds="sudo kvm \
+    local qemu_cmds="kvm \
         -cpu host,+topoext,hv_relaxed,hv_spinlocks=0x1fff,hv-passthrough,+pae,+nx,kvm=on,+svm,+vme,+avx2,+vmx,+hypervisor,+xsave \
         -smp ${SMP_CONFIG} \
         -M q35,usb=on \
@@ -165,7 +152,6 @@ main() {
     echo -e "${GREEN}                    Bởi Đ.Trí (Phiên bản ${version})             ${RESET}"
     echo -e "${GREEN}==============================================================${RESET}\n"
 
-    check_sudo
     manage_session
 
     update_and_install_packages
