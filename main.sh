@@ -35,7 +35,7 @@ if [ -e "session.env" ]; then
       case $optn in
           y|Y) $cmd1;$cmd2;$session $optn;break;exit;;
           n|N)rm -f session.env;rm -f win.qcow2;rm -f win.iso;break;;
-          *)echo -ne ""$red"Chọn lại đê:))$reset"
+          *)echo -ne ""$red"Chọn lại đê:))$reset";;
       done
   esac
 else
