@@ -12,22 +12,32 @@ yellow='\033[1;33m'
 blue='\033[1;34m'
 light_cyan='\033[1;96m'
 reset='\033[0m'
+# thêm version :))
+version=v0.1.0
 clear
+echo -ne ""$green"Credit: Đ.Trí :)"
+echo -ne ""$green"Version: $version"
+
 # check session cũ
 if [ -e "session.env" ]; then
   source session.env
-  echo -ne ""$yellow"Đã Phát hiện session cũ ấn Y để chạy lại N để tạo session mới."
-  read -p "'$reset"[y/n]: " optn1
+  echo -ne ""$yellow"Đã Phát hiện session cũ ấn Y để chạy lại ,N để tạo session mới.$reset"
+  read -p "'$reset"[y/n]:"$reset" " optn1
   while true;do
       case $optn in
-          y|Y) $session $optn;break;exit;;
-          n|N)rm session.env;break;;
+          y|Y) $cmd1;$cmd2;$session $optn;break;exit;;
+          n|N)rm session.env;rm -f win.qcow2;rm -f win.iso;break;;
           *)echo -ne ""$red"Chọn lại đê:))$reset"
+      done
+  esac
 else
    echo -ne ""$red"Không thấy session cũ."
 fi
+
 # bắt đầu nhỉ nhiên là update package và tải mấy gói cần thiết á( do thêm cái ẩn nên ko thấy :))) )
-print ""$yellow"Đang Update và Tải gói cần thiết..."
+print ""$yellow"Đang Update và Tải gói cần thiết...$reset"
 sudo apt update -y > /dev/null 2>&1
-sudo apt install p7zip-full qemu-kvm -y > /dev/null 2>&1
-#
+sudo apt install swtpm qemu-kvm -y > /dev/null 2>&1
+# Tải ít file về :)) 
+wget https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.266-1/virtio-win.iso -O virtio.iso
+wget https://raw.githubusercontent.com/clearlinux/common/refs/heads/master/OVMF_VARS.fd -O OVMF_VARS.fd && wget https://raw.githubusercontent.com/clearlinux/common/refs/heads/master/OVMF_CODE.fd -O OVMF_CODE.fd
