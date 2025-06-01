@@ -63,8 +63,8 @@ qemucmds="sudo kvm -cpu host,+topoext,hv_relaxed,hv_spinlocks=0x1fff,hv-passthro
 
 # Tạo Session (session.env) :))
 echo "cmd1='"'apt update && apt install swtpm qemu-kvm -y'"'" >> session.env
-echo "cmd2='"'"$cmd"'"'" >> session.env
-echo "session='"'"$qemucmds"'"'" >> session.env
+echo "cmd=\""$cmd"\"">> session.env
+echo "session=\"$qemucmds\"" >> session.env
 
 $cmd
 $qemucmds
