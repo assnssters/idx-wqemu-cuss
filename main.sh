@@ -5,6 +5,12 @@
 # usr make code này là Trí :))
 #---- à húu anh săn em vào lúc tối nay làm thịt rồi thành bữa tối nay anh như con sv con sv ơ à à----#
 
+# Variable cho VM :)
+ram=48G
+diskname=win.qcow2
+isoname=win.iso
+smp="2,cores=8,sockets=1"
+option=" "
 # thêm mã màu cho nó đẹp ý mà :))
 red='\033[1;31m'
 green='\033[1;32m'
@@ -12,6 +18,7 @@ yellow='\033[1;33m'
 blue='\033[1;34m'
 light_cyan='\033[1;96m'
 reset='\033[0m'
+
 # thêm version :))
 version=v0.1.0
 clear
@@ -26,14 +33,14 @@ if [ -e "session.env" ]; then
   while true;do
       case $optn in
           y|Y) $cmd1;$cmd2;$session $optn;break;exit;;
-          n|N)rm session.env;rm -f win.qcow2;rm -f win.iso;break;;
+          n|N)rm -f session.env;rm -f win.qcow2;rm -f win.iso;break;;
           *)echo -ne ""$red"Chọn lại đê:))$reset"
       done
   esac
 else
    echo -ne ""$red"Không thấy session cũ."
 fi
-
+clear
 # bắt đầu nhỉ nhiên là update package và tải mấy gói cần thiết á( do thêm cái ẩn nên ko thấy :))) )
 print ""$yellow"Đang Update và Tải gói cần thiết...$reset"
 sudo apt update -y > /dev/null 2>&1
