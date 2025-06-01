@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #==============================================================#
-# Script:  QEMU/KVM Windows VM Setup (Phiên bản tinh gọn)     #
+# Script: idx wqemu QEMU/KVM Windows VM Setup (Phiên bản tinh gọn)     #
 # Version: v0.1.0 (Tester)                                 #
 # Credit:  Đ.Trí                               #
 #==============================================================#
