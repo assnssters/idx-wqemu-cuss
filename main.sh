@@ -12,12 +12,20 @@ yellow='\033[1;33m'
 blue='\033[1;34m'
 light_cyan='\033[1;96m'
 reset='\033[0m'
+clear
 # check session cũ
 if [ -e "session.env" ]; then
   source session.env
-  
+  echo -ne ""$yellow"Đã Phát hiện session cũ ấn Y để chạy lại N để tạo session mới."
+  read -p "'$reset"[y/n]: " optn1
+  while true;do
+      case $optn in
+          y|Y) $session $optn;break;exit;;
+          n|N)rm session.env;break;;
+          *)echo -ne ""$red"Chọn lại đê:))$reset"
+else
+   echo -ne ""$red"Không thấy session cũ."
 fi
-
 # bắt đầu nhỉ nhiên là update package và tải mấy gói cần thiết á( do thêm cái ẩn nên ko thấy :))) )
 print ""$yellow"Đang Update và Tải gói cần thiết..."
 sudo apt update -y > /dev/null 2>&1
